@@ -1,0 +1,137 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: black;
+    /* background: url('image/u4354911328_iphone_7_fake_news_shattered_screen_--chaos_10_--_5b719986-b3d8-4e50-9ea8-11995b29aab3_3.png') center/cover no-repeat; */
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.timer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: "Smooth";
+    font-size: 40vw;
+    color: #e7f7ff;
+    z-index: 10;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 0;
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+
+
+
+.grid-cell {
+    background: rgba(255, 255, 255, 0);
+    /* border: 1px solid #000; */
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.grid-cell.black {
+    background: rgb(0, 255, 0);
+    /* box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); */
+}
+
+.grid-cell.transparent {
+    background: rgba(0, 0, 0, 0);
+    /* box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); */
+}
+
+.grid-cell:hover {
+    transform: scale(1.05);
+    z-index: 5;
+}
+
+.gif-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.gif-overlay img {
+    max-width: 80vw;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+/* Animation for color changes */
+@keyframes colorChange {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.grid-cell.changing {
+    animation: colorChange 0.5s ease-in-out;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .timer {
+        font-size:30vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .timer {
+        font-size: 10vw;
+    }
+}
+
+@font-face {
+    font-family: "Oroban";
+    src: url("font/AT Oroban Elegans.otf");
+}
+
+
+@font-face {
+    font-family: "Smooth";
+    src: url("font/smoothpet-1.ttf");
+}

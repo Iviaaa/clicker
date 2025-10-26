@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dots Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .cross {
+            position: absolute;
+            width: 4vw;
+            height: 4vw;
+            min-width: 30px;
+            min-height: 30px;
+            max-width: 60px;
+            max-height: 60px;
+            background-color: #00ff00;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .cross.falling {
+            transition: all 1s ease-in;
+        }
+
+        .arm-vertical,
+        .arm-horizontal {
+            position: fixed;
+            background-color: #00ff00;
+            z-index: 9;
+            transition: all 0.3s ease;
+        }
+
+        .arm-vertical {
+            width: 0.2vw;
+            min-width: 1px;
+            max-width: 3px;
+            height: 100vh;
+            top: 0;
+        }
+
+        .arm-horizontal {
+            width: 100vw;
+            height: 0.2vw;
+            min-height: 1px;
+            max-height: 3px;
+            left: 0;
+        }
+
+        .coordinates {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 1px solid #00ff00;
+        }
+
+        .target-box {
+            position: absolute;
+            width: 6vw;
+            height: 6vw;
+            min-width: 40px;
+            min-height: 40px;
+            max-width: 80px;
+            max-height: 80px;
+            background-color: #000000;
+            border: 0.2vw solid #00ff00;
+            z-index: 5;
+        }
+
+        .color-reversed .cross {
+            background-color: #000000;
+        }
+
+        .color-reversed .arm-vertical,
+        .color-reversed .arm-horizontal {
+            background-color: #00000000;
+        }
+
+        .color-reversed .target-box {
+            background-color: #00ff00;
+            border-color: #000000;
+        }
+
+        .color-reversed body {
+            background-color: #00ff00;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7; 
+                transform: scale(1.1);
+            }
+        }
+
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 1px solid #00ff00;
+        }
+
+        .coordinates {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="arm-vertical" id="armVertical"></div>
+        <div class="arm-horizontal" id="armHorizontal"></div>
+        <div class="cross" id="cross"></div>
+        <div class="target-box" id="targetBox"></div>
+    </div>
+
+    <div class="coordinates">
+        <div id="crossPos">Aim: (0,0)</div>
+        <div id="targetPos">Target: (0,0)</div>
+        <div id="distance">Distance: 0px</div>
+    </div>
+
+    <script>
+        class DotsGame {
+            constructor() {
+                this.cross = document.getElementById('cross');
+                this.targetBox = document.getElementById('targetBox');
+                this.armVertical = document.getElementById('armVertical');
+                this.armHorizontal = document.getElementById('armHorizontal');
+                this.crossPos = { x: 0, y: 0 };
+                this.targetPos = { x: 0, y: 0 };
+                this.moveInterval = null;
+                this.isMoving = true;
+                
+                this.initializePositions();
+                this.startMovement();
+                this.updateDisplay();
+                this.addClickEvent();
+            }
+
+            initializePositions() {
+                // Set initial positions
+                const crossSize = this.getCrossSize();
+                const targetSize = this.getTargetSize();
+                
+                this.crossPos = {
+                    x: Math.random() * (window.innerWidth - crossSize),
+                    y: Math.random() * (window.innerHeight - crossSize)
+                };
+                
+                this.targetPos = {
+                    x: Math.random() * (window.innerWidth - targetSize),
+                    y: Math.random() * (window.innerHeight - targetSize)
+                };
+                
+                this.updatePositions();
+            }
+
+            getTargetSize() {
+                // Get the actual computed size of the target
+                const targetRect = this.targetBox.getBoundingClientRect();
+                return targetRect.width;
+            }
+
+            updatePositions() {
+                this.cross.style.left = this.crossPos.x + 'px';
+                this.cross.style.top = this.crossPos.y + 'px';
+                
+                // Position the arms to intersect at the cross center
+                const crossSize = this.getCrossSize();
+                const crossCenterX = this.crossPos.x + (crossSize / 2);
+                const crossCenterY = this.crossPos.y + (crossSize / 2);
+                
+                this.armVertical.style.left = crossCenterX + 'px';
+                this.armHorizontal.style.top = crossCenterY + 'px';
+                
+                this.targetBox.style.left = this.targetPos.x + 'px';
+                this.targetBox.style.top = this.targetPos.y + 'px';
+            }
+
+            getCrossSize() {
+                // Get the actual computed size of the cross
+                const crossRect = this.cross.getBoundingClientRect();
+                return crossRect.width;
+            }
+
+            updateDisplay() {
+                document.getElementById('crossPos').textContent = 
+                    `Cross: (${Math.round(this.crossPos.x)},${Math.round(this.crossPos.y)})`;
+                document.getElementById('targetPos').textContent = 
+                    `Target: (${Math.round(this.targetPos.x)},${Math.round(this.targetPos.y)})`;
+                
+                const distance = Math.sqrt(
+                    Math.pow(this.crossPos.x - this.targetPos.x, 2) + 
+                    Math.pow(this.crossPos.y - this.targetPos.y, 2)
+                );
+                document.getElementById('distance').textContent = 
+                    `Distance: ${Math.round(distance)}px`;
+            }
+
+            getRandomMove() {
+                const moves = [];
+                const stepSize = Math.max(30, window.innerWidth * 0.05); // Responsive step size
+                const crossSize = this.getCrossSize();
+                
+                // Generate possible moves
+                const directions = [
+                    { x: stepSize, y: 0 },    // right
+                    { x: -stepSize, y: 0 },   // left
+                    { x: 0, y: stepSize },    // down
+                    { x: 0, y: -stepSize },   // up
+                    { x: stepSize, y: stepSize },   // diagonal down-right
+                    { x: -stepSize, y: stepSize },  // diagonal down-left
+                    { x: stepSize, y: -stepSize },  // diagonal up-right
+                    { x: -stepSize, y: -stepSize } // diagonal up-left
+                ];
+                
+                directions.forEach(dir => {
+                    const newX = this.crossPos.x + dir.x;
+                    const newY = this.crossPos.y + dir.y;
+                    
+                    // Check if move is within bounds
+                    if (newX >= 0 && newX <= window.innerWidth - crossSize && 
+                        newY >= 0 && newY <= window.innerHeight - crossSize) {
+                        
+                        // Calculate distance to target after this move
+                        const distanceAfterMove = Math.sqrt(
+                            Math.pow(newX - this.targetPos.x, 2) + 
+                            Math.pow(newY - this.targetPos.y, 2)
+                        );
+                        
+                        // Calculate current distance
+                        const currentDistance = Math.sqrt(
+                            Math.pow(this.crossPos.x - this.targetPos.x, 2) + 
+                            Math.pow(this.crossPos.y - this.targetPos.y, 2)
+                        );
+                        
+                        // Prefer moves that maintain or increase distance from target
+                        if (distanceAfterMove >= currentDistance - 20) {
+                            moves.push({ x: newX, y: newY });
+                        }
+                    }
+                });
+                
+                // If no good moves, just pick any valid move
+                if (moves.length === 0) {
+                    directions.forEach(dir => {
+                        const newX = this.crossPos.x + dir.x;
+                        const newY = this.crossPos.y + dir.y;
+                        
+                        if (newX >= 0 && newX <= window.innerWidth - 40 && 
+                            newY >= 0 && newY <= window.innerHeight - 40) {
+                            moves.push({ x: newX, y: newY });
+                        }
+                    });
+                }
+                
+                return moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null;
+            }
+
+            moveCross() {
+                const move = this.getRandomMove();
+                
+                if (move) {
+                    this.crossPos = move;
+                    this.updatePositions();
+                    this.updateDisplay();
+                }
+            }
+
+            startMovement() {
+                const move = () => {
+                    this.moveCross();
+                    const nextInterval = Math.random() * 1500 + 500; // 0.5-2 seconds
+                    this.moveInterval = setTimeout(move, nextInterval);
+                };
+                
+                move();
+            }
+
+            stopMovement() {
+                if (this.moveInterval) {
+                    clearTimeout(this.moveInterval);
+                    this.moveInterval = null;
+                }
+            }
+
+            addClickEvent() {
+                document.addEventListener('click', (event) => {
+                    if (!this.isMoving) return; // Only allow clicks during movement
+                    this.triggerFall();
+                });
+            }
+
+            triggerFall() {
+                // Stop movement
+                this.stopMovement();
+                this.isMoving = false;
+                
+                // Add falling class for slower transition
+                this.cross.classList.add('falling');
+                
+                // Move cross to target center
+                const targetSize = this.getTargetSize();
+                const crossSize = this.getCrossSize();
+                
+                this.crossPos = {
+                    x: this.targetPos.x + (targetSize - crossSize) / 2,
+                    y: this.targetPos.y + (targetSize - crossSize) / 2
+                };
+                
+                this.updatePositions();
+                
+                // Reverse colors after a short delay
+                setTimeout(() => {
+                    document.body.classList.add('color-reversed');
+                    document.body.style.backgroundColor = "#00ff00"; // Sets the background color to blue
+                    document.body.style.backgroundImage = "url('image/clicker design.png')";
+                    document.body.style.backgroundSize = "cover";
+                    document.body.style.backgroundPosition = "center";
+                    document.body.style.backgroundRepeat = "no-repeat";
+                }, 500);
+                
+                // Restart game after 5 seconds
+                setTimeout(() => {
+                    this.restartGame();
+                }, 5000);
+            }
+
+            restartGame() {
+                // Remove color reversal
+                document.body.classList.remove('color-reversed');
+                document.body.style.backgroundColor = "black"; 
+                document.body.style.backgroundImage = "none";
+
+                // Remove falling class
+                this.cross.classList.remove('falling');
+                
+                // Reset movement flag
+                this.isMoving = true;
+                
+                // Reset positions
+                this.initializePositions();
+                
+                // Restart movement
+                this.startMovement();
+            }
+        }
+
+        // Initialize the game when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.game = new DotsGame();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            // Keep cross and target within bounds
+            if (window.game) {
+                const crossSize = window.game.getCrossSize();
+                const targetSize = window.game.getTargetSize();
+                
+                window.game.crossPos.x = Math.min(window.game.crossPos.x, window.innerWidth - crossSize);
+                window.game.crossPos.y = Math.min(window.game.crossPos.y, window.innerHeight - crossSize);
+                
+                window.game.targetPos.x = Math.min(window.game.targetPos.x, window.innerWidth - targetSize);
+                window.game.targetPos.y = Math.min(window.game.targetPos.y, window.innerHeight - targetSize);
+                
+                window.game.updatePositions();
+            }
+        });
+    </script>
+</body>
+</html>
