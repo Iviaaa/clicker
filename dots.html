@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,10 @@
 
         body {
             background-color: #000;
+            background-image: url('image/button2.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
@@ -32,7 +37,8 @@
             min-height: 30px;
             max-width: 60px;
             max-height: 60px;
-            background-color: #00ff00;
+            background-color: #000000;
+            border: 2px solid #ff0000;
             z-index: 10;
             transition: all 0.3s ease;
         }
@@ -44,7 +50,7 @@
         .arm-vertical,
         .arm-horizontal {
             position: fixed;
-            background-color: #00ff00;
+            background-color: #ff0000;
             z-index: 9;
             transition: all 0.3s ease;
         }
@@ -70,7 +76,7 @@
             top: 20px;
             right: 20px;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
+            font-family: 'Smooth';
             font-size: 14px;
             z-index: 20;
             background: rgba(0, 0, 0, 0.7);
@@ -80,14 +86,14 @@
 
         .target-box {
             position: absolute;
-            width: 6vw;
-            height: 6vw;
+            width: 5vw;
+            height: 5vw;
             min-width: 40px;
             min-height: 40px;
-            max-width: 80px;
-            max-height: 80px;
-            background-color: #000000;
-            border: 0.2vw solid #00ff00;
+            max-width: 60px;
+            max-height: 60px;
+            background-color: #ff0000;
+            /* border: 0.2vw solid #00ff00; */
             z-index: 5;
         }
 
@@ -97,25 +103,28 @@
 
         .color-reversed .arm-vertical,
         .color-reversed .arm-horizontal {
-            background-color: #00000000;
+            background-color: #000000;
         }
 
         .color-reversed .target-box {
-            background-color: #00ff00;
+            background-color: #ff0000;
             border-color: #000000;
         }
 
         .color-reversed body {
-            background-color: #00ff00;
+            background-color: #ff0000;
         }
 
         @keyframes pulse {
-            0%, 100% { 
-                opacity: 1; 
+
+            0%,
+            100% {
+                opacity: 1;
                 transform: scale(1);
             }
-            50% { 
-                opacity: 0.7; 
+
+            50% {
+                opacity: 0.7;
                 transform: scale(1.1);
             }
         }
@@ -125,7 +134,7 @@
             top: 20px;
             left: 20px;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
+            font-family: 'smooth';
             font-size: 14px;
             z-index: 20;
             background: rgba(0, 0, 0, 0.7);
@@ -138,15 +147,32 @@
             top: 20px;
             right: 20px;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            z-index: 20;
+            font-family: 'Galvji';
+            font-size: 3vw;
+            z-index: 0;
             background: rgba(0, 0, 0, 0.7);
             padding: 10px;
             border: 1px solid #00ff00;
         }
+
+
+        @font-face {
+            font-family: "Smooth";
+            src: url("font/smoothpet-1.ttf");
+        }
+
+        @font-face {
+            font-family: "Oroban";
+            src: url("font/AT Oroban Elegans.otf");
+        }
+
+        @font-face {
+            font-family: "Galvji";
+            src: url("font/Galvji.ttc");
+        }
     </style>
 </head>
+
 <body>
     <div class="game-container">
         <div class="arm-vertical" id="armVertical"></div>
@@ -172,7 +198,7 @@
                 this.targetPos = { x: 0, y: 0 };
                 this.moveInterval = null;
                 this.isMoving = true;
-                
+
                 this.initializePositions();
                 this.startMovement();
                 this.updateDisplay();
@@ -183,17 +209,17 @@
                 // Set initial positions
                 const crossSize = this.getCrossSize();
                 const targetSize = this.getTargetSize();
-                
+
                 this.crossPos = {
                     x: Math.random() * (window.innerWidth - crossSize),
                     y: Math.random() * (window.innerHeight - crossSize)
                 };
-                
+
                 this.targetPos = {
                     x: Math.random() * (window.innerWidth - targetSize),
                     y: Math.random() * (window.innerHeight - targetSize)
                 };
-                
+
                 this.updatePositions();
             }
 
@@ -206,15 +232,15 @@
             updatePositions() {
                 this.cross.style.left = this.crossPos.x + 'px';
                 this.cross.style.top = this.crossPos.y + 'px';
-                
+
                 // Position the arms to intersect at the cross center
                 const crossSize = this.getCrossSize();
                 const crossCenterX = this.crossPos.x + (crossSize / 2);
                 const crossCenterY = this.crossPos.y + (crossSize / 2);
-                
+
                 this.armVertical.style.left = crossCenterX + 'px';
                 this.armHorizontal.style.top = crossCenterY + 'px';
-                
+
                 this.targetBox.style.left = this.targetPos.x + 'px';
                 this.targetBox.style.top = this.targetPos.y + 'px';
             }
@@ -226,16 +252,16 @@
             }
 
             updateDisplay() {
-                document.getElementById('crossPos').textContent = 
+                document.getElementById('crossPos').textContent =
                     `Cross: (${Math.round(this.crossPos.x)},${Math.round(this.crossPos.y)})`;
-                document.getElementById('targetPos').textContent = 
+                document.getElementById('targetPos').textContent =
                     `Target: (${Math.round(this.targetPos.x)},${Math.round(this.targetPos.y)})`;
-                
+
                 const distance = Math.sqrt(
-                    Math.pow(this.crossPos.x - this.targetPos.x, 2) + 
+                    Math.pow(this.crossPos.x - this.targetPos.x, 2) +
                     Math.pow(this.crossPos.y - this.targetPos.y, 2)
                 );
-                document.getElementById('distance').textContent = 
+                document.getElementById('distance').textContent =
                     `Distance: ${Math.round(distance)}px`;
             }
 
@@ -243,7 +269,7 @@
                 const moves = [];
                 const stepSize = Math.max(30, window.innerWidth * 0.05); // Responsive step size
                 const crossSize = this.getCrossSize();
-                
+
                 // Generate possible moves
                 const directions = [
                     { x: stepSize, y: 0 },    // right
@@ -255,53 +281,53 @@
                     { x: stepSize, y: -stepSize },  // diagonal up-right
                     { x: -stepSize, y: -stepSize } // diagonal up-left
                 ];
-                
+
                 directions.forEach(dir => {
                     const newX = this.crossPos.x + dir.x;
                     const newY = this.crossPos.y + dir.y;
-                    
+
                     // Check if move is within bounds
-                    if (newX >= 0 && newX <= window.innerWidth - crossSize && 
+                    if (newX >= 0 && newX <= window.innerWidth - crossSize &&
                         newY >= 0 && newY <= window.innerHeight - crossSize) {
-                        
+
                         // Calculate distance to target after this move
                         const distanceAfterMove = Math.sqrt(
-                            Math.pow(newX - this.targetPos.x, 2) + 
+                            Math.pow(newX - this.targetPos.x, 2) +
                             Math.pow(newY - this.targetPos.y, 2)
                         );
-                        
+
                         // Calculate current distance
                         const currentDistance = Math.sqrt(
-                            Math.pow(this.crossPos.x - this.targetPos.x, 2) + 
+                            Math.pow(this.crossPos.x - this.targetPos.x, 2) +
                             Math.pow(this.crossPos.y - this.targetPos.y, 2)
                         );
-                        
+
                         // Prefer moves that maintain or increase distance from target
                         if (distanceAfterMove >= currentDistance - 20) {
                             moves.push({ x: newX, y: newY });
                         }
                     }
                 });
-                
+
                 // If no good moves, just pick any valid move
                 if (moves.length === 0) {
                     directions.forEach(dir => {
                         const newX = this.crossPos.x + dir.x;
                         const newY = this.crossPos.y + dir.y;
-                        
-                        if (newX >= 0 && newX <= window.innerWidth - 40 && 
+
+                        if (newX >= 0 && newX <= window.innerWidth - 40 &&
                             newY >= 0 && newY <= window.innerHeight - 40) {
                             moves.push({ x: newX, y: newY });
                         }
                     });
                 }
-                
+
                 return moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null;
             }
 
             moveCross() {
                 const move = this.getRandomMove();
-                
+
                 if (move) {
                     this.crossPos = move;
                     this.updatePositions();
@@ -315,7 +341,7 @@
                     const nextInterval = Math.random() * 1500 + 500; // 0.5-2 seconds
                     this.moveInterval = setTimeout(move, nextInterval);
                 };
-                
+
                 move();
             }
 
@@ -337,31 +363,31 @@
                 // Stop movement
                 this.stopMovement();
                 this.isMoving = false;
-                
+
                 // Add falling class for slower transition
                 this.cross.classList.add('falling');
-                
+
                 // Move cross to target center
                 const targetSize = this.getTargetSize();
                 const crossSize = this.getCrossSize();
-                
+
                 this.crossPos = {
                     x: this.targetPos.x + (targetSize - crossSize) / 2,
                     y: this.targetPos.y + (targetSize - crossSize) / 2
                 };
-                
+
                 this.updatePositions();
-                
+
                 // Reverse colors after a short delay
                 setTimeout(() => {
-                    document.body.classList.add('color-reversed');
-                    document.body.style.backgroundColor = "#00ff00"; // Sets the background color to blue
-                    document.body.style.backgroundImage = "url('image/clicker design.png')";
+                    // document.body.classList.add('color-reversed');
+                    document.body.style.backgroundColor = "black";
+                    document.body.style.backgroundImage = "url('image/u4354911328_iphone_7_fake_news_shattered_screen_--chaos_10_--_5b719986-b3d8-4e50-9ea8-11995b29aab3_3.png')";
                     document.body.style.backgroundSize = "cover";
                     document.body.style.backgroundPosition = "center";
                     document.body.style.backgroundRepeat = "no-repeat";
                 }, 500);
-                
+
                 // Restart game after 5 seconds
                 setTimeout(() => {
                     this.restartGame();
@@ -370,19 +396,22 @@
 
             restartGame() {
                 // Remove color reversal
-                document.body.classList.remove('color-reversed');
-                document.body.style.backgroundColor = "black"; 
-                document.body.style.backgroundImage = "none";
+                // document.body.classList.remove('color-reversed');
+                document.body.style.backgroundColor = "black";
+                document.body.style.backgroundImage = "url('image/button2.png')";
+                document.body.style.backgroundSize = "cover";
+                document.body.style.backgroundPosition = "center";
+                document.body.style.backgroundRepeat = "no-repeat";
 
                 // Remove falling class
                 this.cross.classList.remove('falling');
-                
+
                 // Reset movement flag
                 this.isMoving = true;
-                
+
                 // Reset positions
                 this.initializePositions();
-                
+
                 // Restart movement
                 this.startMovement();
             }
@@ -399,16 +428,17 @@
             if (window.game) {
                 const crossSize = window.game.getCrossSize();
                 const targetSize = window.game.getTargetSize();
-                
+
                 window.game.crossPos.x = Math.min(window.game.crossPos.x, window.innerWidth - crossSize);
                 window.game.crossPos.y = Math.min(window.game.crossPos.y, window.innerHeight - crossSize);
-                
+
                 window.game.targetPos.x = Math.min(window.game.targetPos.x, window.innerWidth - targetSize);
                 window.game.targetPos.y = Math.min(window.game.targetPos.y, window.innerHeight - targetSize);
-                
+
                 window.game.updatePositions();
             }
         });
     </script>
 </body>
+
 </html>
