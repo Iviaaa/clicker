@@ -14,13 +14,29 @@
 
         body {
             background-color: #000;
-            background-image: url('image/button2.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
+            position: relative;
+        }
+
+        .ascii-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.0;
+            letter-spacing: 0;
+            color: #00ff00;
+            opacity: 0.8;
+            white-space: pre;
+            overflow: hidden;
+            pointer-events: none;
+            word-break: break-all;
         }
 
         .game-container {
@@ -38,7 +54,7 @@
             max-width: 60px;
             max-height: 60px;
             background-color: #000000;
-            border: 2px solid #ff0000;
+            border: 0.2vw solid #ff0000;
             z-index: 10;
             transition: all 0.3s ease;
         }
@@ -150,7 +166,7 @@
             font-family: 'Galvji';
             font-size: 3vw;
             z-index: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.5);
             padding: 10px;
             border: 1px solid #00ff00;
         }
@@ -174,6 +190,8 @@
 </head>
 
 <body>
+    <div class="ascii-background" id="asciiBackground"></div>
+    
     <div class="game-container">
         <div class="arm-vertical" id="armVertical"></div>
         <div class="arm-horizontal" id="armHorizontal"></div>
@@ -194,12 +212,23 @@
                 this.targetBox = document.getElementById('targetBox');
                 this.armVertical = document.getElementById('armVertical');
                 this.armHorizontal = document.getElementById('armHorizontal');
+                this.asciiBackground = document.getElementById('asciiBackground');
                 this.crossPos = { x: 0, y: 0 };
                 this.targetPos = { x: 0, y: 0 };
                 this.moveInterval = null;
                 this.isMoving = true;
+                this.asciiInterval = null;
+                this.imageList = [
+                    'image/u4354911328_iphone_7_fake_news_shattered_screen_--chaos_10_--_5b719986-b3d8-4e50-9ea8-11995b29aab3_3.png'
+                ];
+                this.loadedImages = [];
+                this.canvas = document.createElement('canvas');
+                this.ctx = this.canvas.getContext('2d');
 
                 this.initializePositions();
+                this.loadImages().then(() => {
+                    this.startAsciiAnimation();
+                });
                 this.startMovement();
                 this.updateDisplay();
                 this.addClickEvent();
@@ -221,6 +250,272 @@
                 };
 
                 this.updatePositions();
+            }
+
+            async loadImages() {
+                const loadPromises = this.imageList.map(src => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve(img);
+                        img.onerror = () => {
+                            console.warn(`Failed to load ${src}`);
+                            resolve(null);
+                        };
+                        img.src = src;
+                    });
+                });
+
+                const results = await Promise.all(loadPromises);
+                this.loadedImages = results.filter(img => img !== null);
+                console.log(`Loaded ${this.loadedImages.length} images`);
+            }
+
+            imageToAscii(img) {
+                const cols = Math.floor(window.innerWidth / 7.5);
+                const rows = Math.floor(window.innerHeight / 12);
+                
+                // Set canvas size to match ASCII grid
+                this.canvas.width = cols;
+                this.canvas.height = rows;
+                
+                // Draw scaled image to canvas
+                this.ctx.drawImage(img, 0, 0, cols, rows);
+                
+                // Get pixel data
+                const imageData = this.ctx.getImageData(0, 0, cols, rows);
+                const pixels = imageData.data;
+                
+                // ASCII characters from darkest to brightest
+                const asciiChars = ' .,:;-=+*#%@█▓▒░';
+                let result = '';
+                
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        const offset = (i * cols + j) * 4;
+                        const r = pixels[offset];
+                        const g = pixels[offset + 1];
+                        const b = pixels[offset + 2];
+                        
+                        // Calculate brightness (0-255)
+                        const brightness = (r + g + b) / 3;
+                        
+                        // Map brightness to ASCII character
+                        const charIndex = Math.floor((brightness / 255) * (asciiChars.length - 1));
+                        result += asciiChars[charIndex];
+                    }
+                    result += '\n';
+                }
+                
+                return result;
+            }
+
+            generateAsciiArt() {
+                // If images are loaded, randomly pick one and convert to ASCII
+                if (this.loadedImages.length > 0){
+                // && Math.random() < 0.7) 
+                    const randomImg = this.loadedImages[Math.floor(Math.random() * this.loadedImages.length)];
+                    return this.imageToAscii(randomImg);
+                }
+                
+                // Fallback: Different ASCII art patterns inspired by shattered phone screen
+                const patterns = [
+                    // Pattern 1: Shattered glass with radiating cracks
+                    () => {
+                        const cols = Math.floor(window.innerWidth / 7.5);
+                        const rows = Math.floor(window.innerHeight / 12);
+                        const centerX = cols / 2;
+                        const centerY = rows / 2;
+                        let result = '';
+                        
+                        for (let i = 0; i < rows; i++) {
+                            for (let j = 0; j < cols; j++) {
+                                const dx = j - centerX;
+                                const dy = i - centerY;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                const angle = Math.atan2(dy, dx);
+                                
+                                // Create radiating crack pattern
+                                if (dist < 3) {
+                                    result += '✶✷✸✹✺✻✼✽✾✿❀❁❂❃❄❅❆❇'[Math.floor(Math.random() * 18)];
+                                } else if (Math.abs(Math.sin(angle * 8 + dist * 0.5)) < 0.2) {
+                                    result += '/\\|─═║╱╲╳'[Math.floor(Math.random() * 9)];
+                                } else if (Math.random() < 0.1) {
+                                    result += '※＊﹡٭*'[Math.floor(Math.random() * 5)];
+                                } else {
+                                    result += ' ';
+                                }
+                            }
+                            result += '\n';
+                        }
+                        return result;
+                    },
+                    // Pattern 2: Fragmented glass shards
+                    () => {
+                        const cols = Math.floor(window.innerWidth / 7.5);
+                        const rows = Math.floor(window.innerHeight / 12);
+                        let result = '';
+                        
+                        for (let i = 0; i < rows; i++) {
+                            for (let j = 0; j < cols; j++) {
+                                const noise = Math.sin(i * 0.5) * Math.cos(j * 0.3) + Math.random();
+                                if (noise > 1.3) {
+                                    result += '◆◇◈◊○◌◍◎●◐◑◒◓'[Math.floor(Math.random() * 13)];
+                                } else if (noise > 0.9) {
+                                    result += '▪▫▬▭▮▯'[Math.floor(Math.random() * 6)];
+                                } else if (noise > 0.5) {
+                                    result += '░▒▓'[Math.floor(Math.random() * 3)];
+                                } else {
+                                    result += ' ';
+                                }
+                            }
+                            result += '\n';
+                        }
+                        return result;
+                    },
+                    // Pattern 3: Spiderweb cracks
+                    () => {
+                        const cols = Math.floor(window.innerWidth / 7.5);
+                        const rows = Math.floor(window.innerHeight / 12);
+                        const centerX = cols / 2 + (Math.random() - 0.5) * 10;
+                        const centerY = rows / 2 + (Math.random() - 0.5) * 10;
+                        let result = '';
+                        
+                        for (let i = 0; i < rows; i++) {
+                            for (let j = 0; j < cols; j++) {
+                                const dx = j - centerX;
+                                const dy = i - centerY;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                const angle = Math.atan2(dy, dx);
+                                
+                                // Spiderweb pattern
+                                if (dist < 2) {
+                                    result += '⊗⊕⊙⊛⊚⊜'[Math.floor(Math.random() * 6)];
+                                } else if (Math.abs(Math.sin(angle * 6)) < 0.15 || Math.abs(dist % 5) < 0.3) {
+                                    result += '─│┼┤├┬┴╋'[Math.floor(Math.random() * 8)];
+                                } else if (Math.random() < 0.05) {
+                                    result += '╱╲╳'[Math.floor(Math.random() * 3)];
+                                } else {
+                                    result += ' ';
+                                }
+                            }
+                            result += '\n';
+                        }
+                        return result;
+                    },
+                    // Pattern 4: Scattered glass fragments
+                    () => {
+                        const cols = Math.floor(window.innerWidth / 7.5);
+                        const rows = Math.floor(window.innerHeight / 12);
+                        let result = '';
+                        
+                        for (let i = 0; i < rows; i++) {
+                            for (let j = 0; j < cols; j++) {
+                                const cluster = Math.sin(i * 0.7 + j * 0.5) * Math.cos(i * 0.3 - j * 0.4);
+                                if (cluster > 0.7) {
+                                    result += '◢◣◤◥'[Math.floor(Math.random() * 4)];
+                                } else if (cluster > 0.4) {
+                                    result += '▲△▼▽◀◁▶▷'[Math.floor(Math.random() * 8)];
+                                } else if (Math.random() < 0.08) {
+                                    result += '⋄⋅∘∙'[Math.floor(Math.random() * 4)];
+                                } else {
+                                    result += ' ';
+                                }
+                            }
+                            result += '\n';
+                        }
+                        return result;
+                    },
+                    // Pattern 5: Impact point with radiating lines
+                    () => {
+                        const cols = Math.floor(window.innerWidth / 7.5);
+                        const rows = Math.floor(window.innerHeight / 12);
+                        const impactX = Math.floor(cols / 2 + (Math.random() - 0.5) * 20);
+                        const impactY = Math.floor(rows / 2 + (Math.random() - 0.5) * 10);
+                        let result = '';
+                        
+                        for (let i = 0; i < rows; i++) {
+                            for (let j = 0; j < cols; j++) {
+                                const dx = j - impactX;
+                                const dy = i - impactY;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                const angle = Math.atan2(dy, dx);
+                                
+                                if (dist < 1.5) {
+                                    result += '★☆✦✧✨✩✪✫✬✭✮✯✰'[Math.floor(Math.random() * 13)];
+                                } else if (Math.abs(Math.sin(angle * 12)) < 0.12) {
+                                    result += '═║╔╗╚╝╠╣╦╩╬'[Math.floor(Math.random() * 11)];
+                                } else if (Math.abs(Math.cos(angle * 16)) < 0.1) {
+                                    result += '━│┏┓┗┛┣┫┳┻╋'[Math.floor(Math.random() * 11)];
+                                } else if (Math.random() < 0.03) {
+                                    result += '▪▫'[Math.floor(Math.random() * 2)];
+                                } else {
+                                    result += ' ';
+                                }
+                            }
+                            result += '\n';
+                        }
+                        return result;
+                    },
+                    // Pattern 6: Broken screen texture
+                    () => {
+                        const cols = Math.floor(window.innerWidth / 7.5);
+                        const rows = Math.floor(window.innerHeight / 12);
+                        let result = '';
+                        
+                        for (let i = 0; i < rows; i++) {
+                            for (let j = 0; j < cols; j++) {
+                                const pattern = (i + j) % 7;
+                                const intensity = Math.random();
+                                
+                                if (pattern === 0 && intensity > 0.5) {
+                                    result += '▓▒░'[Math.floor(Math.random() * 3)];
+                                } else if (pattern === 1 && intensity > 0.6) {
+                                    result += '▀▄█'[Math.floor(Math.random() * 3)];
+                                } else if (pattern === 2 && intensity > 0.7) {
+                                    result += '■□▪▫'[Math.floor(Math.random() * 4)];
+                                } else if (intensity > 0.9) {
+                                    result += '※*'[Math.floor(Math.random() * 2)];
+                                } else {
+                                    result += ' ';
+                                }
+                            }
+                            result += '\n';
+                        }
+                        return result;
+                    }
+                ];
+
+                // Pick a random pattern
+                const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+                return pattern();
+            }
+
+            startAsciiAnimation() {
+                // Update ASCII art at random intervals
+                const updateAscii = () => {
+                    // Add fade out effect
+                    this.asciiBackground.style.transition = 'opacity 0.3s ease-out';
+                    this.asciiBackground.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        this.asciiBackground.textContent = this.generateAsciiArt();
+                        // Fade back in
+                        this.asciiBackground.style.opacity = '0.8';
+                    }, 300);
+                    
+                    const nextInterval = Math.random() * 4000 + 2000; // 2-6 seconds
+                    this.asciiInterval = setTimeout(updateAscii, nextInterval);
+                };
+                
+                updateAscii();
+            }
+
+            stopAsciiAnimation() {
+                if (this.asciiInterval) {
+                    clearTimeout(this.asciiInterval);
+                    this.asciiInterval = null;
+                }
             }
 
             getTargetSize() {
@@ -338,7 +633,7 @@
             startMovement() {
                 const move = () => {
                     this.moveCross();
-                    const nextInterval = Math.random() * 1500 + 500; // 0.5-2 seconds
+                    const nextInterval = Math.random() * 3000 + 1500; // 1.5-4.5 seconds
                     this.moveInterval = setTimeout(move, nextInterval);
                 };
 
@@ -360,8 +655,9 @@
             }
 
             triggerFall() {
-                // Stop movement
+                // Stop movement and ASCII animation
                 this.stopMovement();
+                this.stopAsciiAnimation();
                 this.isMoving = false;
 
                 // Add falling class for slower transition
@@ -378,9 +674,12 @@
 
                 this.updatePositions();
 
-                // Reverse colors after a short delay
+                // Reverse colors and show image after a short delay
                 setTimeout(() => {
-                    // document.body.classList.add('color-reversed');
+                    // Hide ASCII background
+                    this.asciiBackground.style.opacity = '0';
+                    
+                    // Show image
                     document.body.style.backgroundColor = "black";
                     document.body.style.backgroundImage = "url('image/u4354911328_iphone_7_fake_news_shattered_screen_--chaos_10_--_5b719986-b3d8-4e50-9ea8-11995b29aab3_3.png')";
                     document.body.style.backgroundSize = "cover";
@@ -395,13 +694,12 @@
             }
 
             restartGame() {
-                // Remove color reversal
-                // document.body.classList.remove('color-reversed');
+                // Remove image background
                 document.body.style.backgroundColor = "black";
-                document.body.style.backgroundImage = "url('image/button2.png')";
-                document.body.style.backgroundSize = "cover";
-                document.body.style.backgroundPosition = "center";
-                document.body.style.backgroundRepeat = "no-repeat";
+                document.body.style.backgroundImage = "none";
+
+                // Show ASCII background again
+                this.asciiBackground.style.opacity = '0.8';
 
                 // Remove falling class
                 this.cross.classList.remove('falling');
@@ -411,6 +709,9 @@
 
                 // Reset positions
                 this.initializePositions();
+
+                // Restart ASCII animation
+                this.startAsciiAnimation();
 
                 // Restart movement
                 this.startMovement();
@@ -436,6 +737,11 @@
                 window.game.targetPos.y = Math.min(window.game.targetPos.y, window.innerHeight - targetSize);
 
                 window.game.updatePositions();
+                
+                // Refresh ASCII art for new screen size
+                if (window.game.isMoving) {
+                    window.game.asciiBackground.textContent = window.game.generateAsciiArt();
+                }
             }
         });
     </script>
